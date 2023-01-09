@@ -3,6 +3,10 @@ import click
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+import numpy as np
+from torch.utils.data import Dataset
+import torch
+import os
 
 
 @click.command()
@@ -12,8 +16,50 @@ def main(input_filepath, output_filepath):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
+    Mnist()
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
+
+
+class Mnist(Dataset):
+    def __init__(self, ingest, processed, subset):
+        self.ing = ingest
+        self.proc = processed
+        self.sub = subset
+        self.root = os.path.dirname(os.path.abspath(__file__))
+        #print(os.path.join(self.root, self.ing))
+        #print(os.listdir(os.path.join(self.root, self.ing)))
+        try:
+            self.data, self.labels = torch.load(os.path.join(self.root, processed, f"{subset}.pt"))
+        except:
+            self.data, self.labels = self._concat_content()
+            torch.save([self.data, self.labels], os.path.join(self.root, processed, f"{subset}.pt"))
+
+    def __len__(self):
+        return self.labels.numel()
+
+    def __getitem__(self, idx):
+        img, target = self.data[idx], self.labels[idx]
+        return img.float(), target
+
+    def _load_file(self):
+        content = []
+        files = os.listdir(os.path.join(self.root, self.ing))
+        #print(files)
+        itter = 0
+        if f"{self.sub}_0.npz" in files:
+            while f"{self.sub}_{itter}.npz" in files:
+                content.append(np.load(os.path.join(self.root, self.ing, f"{self.sub}_{itter}.npz")))
+                itter += 1
+        else:
+            content.append(np.load(os.path.join(self.root, self.ing, f"{self.sub}.npz")))
+        return content
+
+    def _concat_content(self):
+        content = self._load_file()
+        data = torch.tensor(np.concatenate([c.f.images for c in content])).reshape(-1, 1, 28, 28)
+        labels = torch.tensor(np.concatenate([c.f.labels for c in content]))
+        return data, labels
 
 
 if __name__ == '__main__':
