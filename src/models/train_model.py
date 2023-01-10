@@ -1,14 +1,16 @@
 import argparse
+import os
 import sys
 
+import matplotlib.pyplot as plt
 import torch
+from model import MyAwesomeModel
+from torch import nn, optim
+
+from src.data.make_dataset import Mnist
+
 #import click
 
-from torch import nn, optim
-from src.data.make_dataset import Mnist
-from model import MyAwesomeModel
-import matplotlib.pyplot as plt
-import os
 
 
 #@click.group()
