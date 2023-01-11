@@ -27,4 +27,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USER_NAME }}/dtu_mlops
+          tags: ${{ secrets.DOCKERHUB_USER_NAME }}/dtu_mlops:test
